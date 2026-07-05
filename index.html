@@ -152,6 +152,79 @@
   }
   .arcade-grid-cards .mission-card{ cursor:pointer; }
 
+  /* ---------------- NEAL.FUN-STYLE HUB REDESIGN ---------------- */
+  #screen-hub .hud{
+    background:transparent;
+    border:none;
+    border-bottom:1px solid rgba(255,255,255,.12);
+    border-radius:0;
+    padding:6px 2px 18px;
+    margin-bottom:26px;
+  }
+  #screen-hub .gem-pill, #screen-hub .level-pill{
+    background:rgba(255,255,255,.04);
+    border-width:1px;
+  }
+  #screen-hub .panel{
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:28px;
+    box-shadow:none;
+    padding:30px 26px;
+    margin:30px 0;
+  }
+  #screen-hub .panel h2{
+    font-size:1.9rem;
+    letter-spacing:-.01em;
+    margin-bottom:.2em;
+  }
+  #screen-hub .panel > p{
+    color:#b7bde4;
+    max-width:58ch;
+    line-height:1.6;
+  }
+  #screen-hub .map-grid{
+    gap:22px;
+    margin-top:28px;
+  }
+  #screen-hub .mission-card{
+    background:rgba(255,255,255,.035);
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:26px;
+    padding:28px 20px;
+    box-shadow:none;
+    transition:transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease, border-color .4s ease, background .4s ease;
+    opacity:0; transform:translateY(18px) scale(.94);
+    animation:hubCardIn .55s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  #screen-hub .mission-card:hover{
+    transform:translateY(-10px) scale(1.045);
+    border-color:var(--teal);
+    background:rgba(255,255,255,.065);
+    box-shadow:0 24px 44px -16px rgba(0,0,0,.55);
+  }
+  #screen-hub .mission-card:active{
+    transform:translateY(-4px) scale(1.01);
+  }
+  #screen-hub .mission-card .icon{
+    font-size:3.3rem;
+    display:inline-block;
+    transition:transform .4s cubic-bezier(.3,1.6,.4,1);
+  }
+  #screen-hub .mission-card:hover .icon{
+    transform:scale(1.18) rotate(-6deg);
+  }
+  #screen-hub .mission-card h3{
+    font-size:1.18rem;
+    margin:.5em 0 .15em;
+  }
+  #screen-hub .arcade-card{
+    background:rgba(255,201,60,.045) !important;
+  }
+  @keyframes hubCardIn{
+    to{ opacity:1; transform:translateY(0) scale(1); }
+  }
+
   .hud{
     display:flex; justify-content:space-between; align-items:center;
     flex-wrap:wrap; gap:10px;
@@ -315,17 +388,13 @@
         <button class="btn small" id="mode-2p-btn" onclick="setMode('two')">👥 2 Player (head-to-head)</button>
       </div>
 
-      <p>Player 1 name:</p>
-      <input type="text" id="player-name" placeholder="Type your name" maxlength="20">
-      <p>Player 1 email:</p>
-      <input type="email" id="player-email" placeholder="Type your email" maxlength="60">
+      <p>Player 1 nickname:</p>
+      <input type="text" id="player-name" placeholder="Pick a nickname or username" maxlength="20">
       <div id="player2-name-wrap" style="display:none;">
-        <p>Player 2 name:</p>
-        <input type="text" id="player2-name" placeholder="Type player 2's name" maxlength="20">
-        <p>Player 2 email:</p>
-        <input type="email" id="player2-email" placeholder="Type player 2's email" maxlength="60">
+        <p>Player 2 nickname:</p>
+        <input type="text" id="player2-name" placeholder="Pick player 2's nickname" maxlength="20">
       </div>
-      <p id="login-error" class="muted" style="display:none; color:#ff8888;">Please enter a name and a valid email for each player.</p>
+      <p id="login-error" class="muted" style="display:none; color:#ff8888;">Please enter a nickname for each player.</p>
       <div class="btn-row">
         <button class="btn" onclick="goToCharSelect()">Start the mission →</button>
         <button class="btn teal" onclick="openInstructions('start')">📖 How to play</button>
@@ -1903,7 +1972,7 @@ function diffRangeForLevel(level, questions, count){
 /* ---------------- STATE ---------------- */
 
 let state = {
-  name:'', name2:'', email:'', email2:'', character:null, character2:null,
+  name:'', name2:'', character:null, character2:null,
   mode:'single', // 'single' | 'two'
   totalScore:0, totalScore2:0,
   gems:0, gems2:0, // lifetime gems, drive the overall 10-level progression
@@ -1961,7 +2030,7 @@ function drawQuestions(missionId, count){
 function saveState(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      name:state.name, name2:state.name2, email:state.email, email2:state.email2, character:state.character, character2:state.character2,
+      name:state.name, name2:state.name2, character:state.character, character2:state.character2,
       mode:state.mode, totalScore:state.totalScore, totalScore2:state.totalScore2,
       gems:state.gems, gems2:state.gems2,
       missionGems:state.missionGems, missionGems2:state.missionGems2,
@@ -1976,8 +2045,6 @@ function loadState(){
     const d = JSON.parse(raw);
     state.name = d.name || '';
     state.name2 = d.name2 || '';
-    state.email = d.email || '';
-    state.email2 = d.email2 || '';
     state.character = d.character || null;
     state.character2 = d.character2 || null;
     state.mode = d.mode || 'single';
@@ -2028,28 +2095,22 @@ function setMode(mode){
   document.getElementById('player2-name-wrap').style.display = mode==='two' ? 'block' : 'none';
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 function goToCharSelect(){
   const errEl = document.getElementById('login-error');
   const name1 = document.getElementById('player-name').value.trim();
-  const email1 = document.getElementById('player-email').value.trim();
-  let name2 = '', email2 = '';
+  let name2 = '';
   if(state.mode==='two'){
     name2 = document.getElementById('player2-name').value.trim();
-    email2 = document.getElementById('player2-email').value.trim();
   }
-  const valid = name1 && EMAIL_RE.test(email1) && (state.mode!=='two' || (name2 && EMAIL_RE.test(email2)));
+  const valid = name1 && (state.mode!=='two' || name2);
   if(!valid){
     if(errEl) errEl.style.display = 'block';
     return;
   }
   if(errEl) errEl.style.display = 'none';
   state.name = name1;
-  state.email = email1;
   if(state.mode==='two'){
     state.name2 = name2;
-    state.email2 = email2;
   }
   state.charSelectFor = 1;
   renderCharGrid();
@@ -2124,9 +2185,10 @@ function renderHub(){
 
   const grid = document.getElementById('map-grid');
   grid.innerHTML = '';
-  MISSIONS.forEach(m=>{
+  MISSIONS.forEach((m,i)=>{
     const div = document.createElement('div');
     div.className = 'mission-card';
+    div.style.animationDelay = (i*0.04)+'s';
     div.onclick = ()=> startMission(m.id);
 
     let badgeHtml = '';
@@ -2173,6 +2235,7 @@ function renderHub(){
 
   const arcadeDiv = document.createElement('div');
   arcadeDiv.className = 'mission-card arcade-card';
+  arcadeDiv.style.animationDelay = (MISSIONS.length*0.04)+'s';
   arcadeDiv.onclick = ()=> showScreen('arcade');
   arcadeDiv.innerHTML = `
     <div class="ribbon">FREE PLAY</div>
@@ -3321,10 +3384,8 @@ function spawnConfettiBurst(count=10){
 
 loadState();
 if(state.name) document.getElementById('player-name').value = state.name;
-if(state.email) document.getElementById('player-email').value = state.email;
 if(state.name2) document.getElementById('player2-name').value = state.name2;
-if(state.email2) document.getElementById('player2-email').value = state.email2;
-if(state.name && state.email && state.character && (state.mode!=='two' || (state.name2 && state.email2 && state.character2))){
+if(state.name && state.character && (state.mode!=='two' || (state.name2 && state.character2))){
   if(state.mode==='two') setMode('two');
   showScreen('hub');
 }
