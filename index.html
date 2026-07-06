@@ -115,20 +115,42 @@
     color:#6b7280;
     font-size:.92rem;
   }
+  .combined-lb .lb-scroll{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+  }
   .combined-lb table{
     width:100%;
+    min-width:760px;
     border-collapse:collapse;
-    font-size:.95rem;
+    font-size:.9rem;
   }
   .combined-lb th, .combined-lb td{
-    padding:10px 12px;
+    padding:10px 10px;
     text-align:left;
     border-bottom:1px solid #eee;
+    white-space:nowrap;
   }
-  .combined-lb th{ color:#9333ea; font-size:.82rem; text-transform:uppercase; letter-spacing:.04em; }
+  .combined-lb th{ color:#9333ea; font-size:.76rem; text-transform:uppercase; letter-spacing:.04em; }
   .combined-lb td:first-child, .combined-lb th:first-child{ width:36px; text-align:center; }
+  .combined-lb td:not(:first-child):not(:nth-child(2)), .combined-lb th:not(:first-child):not(:nth-child(2)){ text-align:center; }
   .combined-lb tr.rank1 td{ font-weight:800; color:#b45309; }
   .combined-lb .empty-note{ color:#9ca3af; font-size:.9rem; }
+  .combined-lb .weekly-note{
+    margin:0 0 16px;
+    padding:12px 16px;
+    background:#fff7e6;
+    border:1px solid #ffe1a8;
+    border-radius:12px;
+    font-size:.88rem;
+    color:#7c4a03;
+  }
+  .combined-lb .weekly-note:empty{ display:none; }
+  .combined-lb .tiers-note{
+    margin:16px 0 0;
+    color:#9ca3af;
+    font-size:.8rem;
+  }
 
   @media (max-width:480px){
     .wrap{ padding:44px 18px 60px; }
@@ -193,50 +215,139 @@
     </div>
     <div class="combined-lb">
       <h2>🏆 Combined Leaderboard</h2>
-      <p class="sub">Totals every player's best score across all 8 games, saved on this browser.</p>
-      <div id="combined-lb-table"></div>
+      <p class="sub">Shows every player's best score in each of the 8 games, saved on this browser.</p>
+      <div class="weekly-note" id="weekly-winners-note"></div>
+      <div class="lb-scroll"><div id="combined-lb-table"></div></div>
+      <p class="tiers-note">🏆 Weekly bonus gems: whoever scores the most across all games each week gets 100, 2nd gets 50, 3rd gets 25, 4th gets 10, 5th gets 5 — awarded automatically here the next time the page is opened after the week ends.</p>
     </div>
 
     <footer class="note">Progress saves automatically in your browser, separately for each game. Made for a curious Grade 6 crew leader.</footer>
   </div>
 
 <script>
-  const LB_KEYS = [
-    'leaderboard_goodPawsCrew',
-    'leaderboard_starVoyagers',
-    'leaderboard_timeTrekkers',
-    'leaderboard_passportQuest',
-    'leaderboard_worldWondersBuilder',
-    'leaderboard_factDefenders',
-    'leaderboard_wordWizards',
-    'leaderboard_factRacers'
+  const LB_GAMES = [
+    { key:'leaderboard_goodPawsCrew',       label:'Good Paws' },
+    { key:'leaderboard_starVoyagers',       label:'Star Voyagers' },
+    { key:'leaderboard_timeTrekkers',       label:'Time Trekkers' },
+    { key:'leaderboard_passportQuest',      label:'Passport Quest' },
+    { key:'leaderboard_worldWondersBuilder',label:'World Wonders' },
+    { key:'leaderboard_factDefenders',      label:'Fact Defenders' },
+    { key:'leaderboard_wordWizards',        label:'Word Wizards' },
+    { key:'leaderboard_factRacers',         label:'Fact Racers' }
   ];
+  const BONUS_GEMS_KEY = 'qca_bonusGems';   // { name: totalBonusGemsEarned }
+  const WEEK_STATE_KEY = 'qca_weekState';   // { weekKey, snapshotTotals:{name:score}, lastWinners:[...] }
+  const WEEKLY_TIERS = [100, 50, 25, 10, 5]; // 1st..5th place bonus gems
 
-  function renderCombinedLeaderboard(){
-    const combined = {};
-    LB_KEYS.forEach(key=>{
+  // ISO week key like "2026-W27" so we can detect when a new week has started.
+  function getWeekKey(d){
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = (date.getUTCDay() + 6) % 7;
+    date.setUTCDate(date.getUTCDate() - dayNum + 3);
+    const firstThursday = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
+    const weekNum = 1 + Math.round(((date - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+    return date.getUTCFullYear() + '-W' + String(weekNum).padStart(2, '0');
+  }
+
+  function computeStats(){
+    const perGame = {};    // name -> { gameLabel: bestScore }
+    const totals = {};     // name -> combined score across all games
+    const gamesPlayed = {};// name -> number of games with an entry
+    const badges = {};     // name -> total badges across all games
+    LB_GAMES.forEach(({key, label})=>{
       let list = [];
-      try{ list = JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ list = []; }
+      try{ list = JSON.parse(localStorage.getItem(key) || '[]'); }catch(e){ list = []; }
       list.forEach(entry=>{
         if(!entry || !entry.name) return;
-        if(!combined[entry.name]){
-          combined[entry.name] = { name: entry.name, totalScore: 0, gamesPlayed: 0, totalBadges: 0 };
-        }
-        combined[entry.name].totalScore += (entry.score || 0);
-        combined[entry.name].gamesPlayed += 1;
-        combined[entry.name].totalBadges += (entry.badges || 0);
+        if(!perGame[entry.name]) perGame[entry.name] = {};
+        perGame[entry.name][label] = Math.max(perGame[entry.name][label] || 0, entry.score || 0);
+        totals[entry.name] = (totals[entry.name] || 0) + (entry.score || 0);
+        gamesPlayed[entry.name] = (gamesPlayed[entry.name] || 0) + 1;
+        badges[entry.name] = (badges[entry.name] || 0) + (entry.badges || 0);
       });
     });
+    return { perGame, totals, gamesPlayed, badges };
+  }
 
-    const rows = Object.values(combined).sort((a,b)=> b.totalScore - a.totalScore);
-    const el = document.getElementById('combined-lb-table');
-    if(!rows.length){
-      el.innerHTML = '<p class="empty-note">No scores yet — play any of the 8 games on this browser to appear here.</p>';
+  // Checks whether a new week has begun since the last time this page was opened.
+  // If so, ranks players by the score they gained during the week that just ended
+  // and pays out bonus gems per WEEKLY_TIERS, then starts a fresh weekly snapshot.
+  function processWeeklyRewards(totals){
+    let weekState = null;
+    try{ weekState = JSON.parse(localStorage.getItem(WEEK_STATE_KEY) || 'null'); }catch(e){ weekState = null; }
+    let bonusGems = {};
+    try{ bonusGems = JSON.parse(localStorage.getItem(BONUS_GEMS_KEY) || '{}'); }catch(e){ bonusGems = {}; }
+    const currentWeekKey = getWeekKey(new Date());
+
+    if(!weekState){
+      weekState = { weekKey: currentWeekKey, snapshotTotals: Object.assign({}, totals), lastWinners: [] };
+      localStorage.setItem(WEEK_STATE_KEY, JSON.stringify(weekState));
+      return { bonusGems, lastWinners: [] };
+    }
+
+    if(weekState.weekKey !== currentWeekKey){
+      const gains = {};
+      Object.keys(totals).forEach(name=>{
+        const gain = totals[name] - (weekState.snapshotTotals[name] || 0);
+        if(gain > 0) gains[name] = gain;
+      });
+      const ranked = Object.entries(gains).sort((a, b)=> b[1] - a[1]);
+      const winners = [];
+      ranked.slice(0, WEEKLY_TIERS.length).forEach(([name, gain], i)=>{
+        bonusGems[name] = (bonusGems[name] || 0) + WEEKLY_TIERS[i];
+        winners.push({ name, gain, place: i + 1, bonus: WEEKLY_TIERS[i] });
+      });
+      localStorage.setItem(BONUS_GEMS_KEY, JSON.stringify(bonusGems));
+      weekState = { weekKey: currentWeekKey, snapshotTotals: Object.assign({}, totals), lastWinners: winners };
+      localStorage.setItem(WEEK_STATE_KEY, JSON.stringify(weekState));
+      return { bonusGems, lastWinners: winners };
+    }
+
+    return { bonusGems, lastWinners: weekState.lastWinners || [] };
+  }
+
+  function renderCombinedLeaderboard(){
+    const { perGame, totals, gamesPlayed, badges } = computeStats();
+    const { bonusGems, lastWinners } = processWeeklyRewards(totals);
+
+    const names = Object.keys(totals);
+    const tableEl = document.getElementById('combined-lb-table');
+    const winnersEl = document.getElementById('weekly-winners-note');
+
+    if(!names.length){
+      tableEl.innerHTML = '<p class="empty-note">No scores yet — play any of the 8 games on this browser to appear here.</p>';
+      winnersEl.innerHTML = '';
       return;
     }
-    el.innerHTML = '<table><thead><tr><th>#</th><th>Name</th><th>Combined score</th><th>Games played</th><th>Total badges</th></tr></thead><tbody>' +
-      rows.map((r,i)=> '<tr'+(i===0?' class="rank1"':'')+'><td>'+(i+1)+'</td><td>'+r.name+'</td><td>'+r.totalScore+'</td><td>'+r.gamesPlayed+'/8</td><td>'+r.totalBadges+'</td></tr>').join('') +
-      '</tbody></table>';
+
+    const rows = names.map(name=>({
+      name,
+      total: totals[name] || 0,
+      gamesPlayed: gamesPlayed[name] || 0,
+      badges: badges[name] || 0,
+      bonus: bonusGems[name] || 0,
+      perGame: perGame[name] || {}
+    })).sort((a, b)=> b.total - a.total);
+
+    const gameLabels = LB_GAMES.map(g=> g.label);
+    let html = '<table><thead><tr><th>#</th><th>Name</th>';
+    gameLabels.forEach(label=>{ html += '<th>' + label + '</th>'; });
+    html += '<th>Bonus 💎</th><th>Total</th></tr></thead><tbody>';
+    rows.forEach((r, i)=>{
+      html += '<tr' + (i === 0 ? ' class="rank1"' : '') + '><td>' + (i + 1) + '</td><td>' + r.name + '</td>';
+      gameLabels.forEach(label=>{ html += '<td>' + (r.perGame[label] != null ? r.perGame[label] : '—') + '</td>'; });
+      html += '<td>' + r.bonus + '</td><td>' + r.total + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    tableEl.innerHTML = html;
+
+    if(lastWinners && lastWinners.length){
+      winnersEl.innerHTML = '🏆 Last week\'s champions: ' + lastWinners.map(w=>
+        '#' + w.place + ' ' + w.name + ' (+' + w.bonus + ' bonus gems)'
+      ).join(', ');
+    } else {
+      winnersEl.innerHTML = '';
+    }
   }
 
   renderCombinedLeaderboard();
