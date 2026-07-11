@@ -46,10 +46,15 @@
   }
   .avatar-title{ font-size:1.5rem; margin:0 0 8px; letter-spacing:-.01em; }
   .avatar-sub{ color:#6b7280; font-size:.9rem; margin:0 0 16px; line-height:1.4; }
-  .bot-preview{ width:150px; height:150px; margin:0 auto 14px; display:block; }
+  .bot-preview{ width:150px; height:158px; margin:0 auto 14px; display:block; }
   .bot-body{ fill:var(--bot-color); }
-  .bot-head{ fill:var(--bot-color); filter:brightness(1.12); }
-  .bot-arm{ fill:var(--bot-color); filter:brightness(.82); }
+  .bot-head{ fill:var(--bot-color); filter:brightness(1.14); }
+  .bot-arm, .bot-leg{ fill:var(--bot-color); filter:brightness(.8); }
+  .bot-arm-tip{ fill:var(--bot-color); filter:brightness(.62); }
+  .bot-visor{ fill:#20242c; opacity:.88; }
+  .bot-eye{ fill:#8ff0ff; }
+  .bot-chest{ fill:#fff; opacity:.5; }
+  .bot-chest-core{ fill:var(--bot-color); filter:brightness(1.3); }
   .bot-antenna{ fill:#2b2b38; }
   .bot-antenna-tip{ fill:#ffd23f; }
   .avatar-input{
@@ -64,7 +69,7 @@
     font-family:inherit;
   }
   .avatar-input:focus{ outline:none; border-color:#c9633a; }
-  .swatch-row{ display:flex; justify-content:center; gap:10px; margin-bottom:22px; }
+  .swatch-row{ display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-bottom:22px; }
   .swatch{
     width:34px; height:34px;
     border-radius:50%;
@@ -143,22 +148,23 @@
   }
   .world-map{
     position:relative;
-    max-width:860px;
+    width:100%;
     margin:0 auto 20px;
-    aspect-ratio:1000/800;
+    height:clamp(460px, 82vh, 860px);
     border-radius:36px;
     overflow:hidden;
-    box-shadow:0 2px 10px rgba(0,0,0,.08);
-    background:linear-gradient(180deg,#cfe8ff 0%,#eaf6ef 55%,#fdf3e7 100%);
+    box-shadow:0 10px 40px -12px rgba(0,0,0,.25);
+    background:linear-gradient(180deg,#bfe0ff 0%,#cfe8ff 30%,#e6f3e0 62%,#fdf3e7 100%);
   }
-  .map-bg{
+  .map-layer{
     position:absolute;
     inset:0;
     width:100%;
     height:100%;
     display:block;
+    pointer-events:none;
   }
-  .map-nodes{ position:absolute; inset:0; }
+  .map-nodes{ position:absolute; inset:0; z-index:5; }
   .hub-label{
     position:absolute;
     left:50%; top:50%;
@@ -233,8 +239,9 @@
     box-shadow:0 16px 22px -8px rgba(0,0,0,.4);
     z-index:1;
   }
-  .land:hover .island-icon, .land:focus-visible .island-icon{ transform:translateX(-50%) scale(1.15) rotate(-4deg); }
-  .land:hover .island-disc, .land:focus-visible .island-disc{ box-shadow:0 0 0 6px rgba(255,255,255,.7) inset, 0 0 22px rgba(0,0,0,.18) inset, 0 36px 40px -14px rgba(0,0,0,.48); }
+  .land:hover .island-icon, .land:focus-visible .island-icon, .land.selected .island-icon{ transform:translateX(-50%) scale(1.15) rotate(-4deg); }
+  .land:hover .island-disc, .land:focus-visible .island-disc, .land.selected .island-disc{ box-shadow:0 0 0 6px rgba(255,255,255,.7) inset, 0 0 22px rgba(0,0,0,.18) inset, 0 36px 40px -14px rgba(0,0,0,.48); }
+  .land.selected .island-disc{ outline:4px solid var(--c2); outline-offset:6px; }
   .land-name{
     margin-top:8px;
     font-weight:800;
@@ -350,67 +357,35 @@
     box-shadow:0 2px 8px rgba(0,0,0,.08);
     z-index:10;
   }
-  .tagline-badge{
-    position:fixed;
-    top:16px;
-    left:18px;
-    font-size:1.15rem;
+  .site-nav{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:12px;
+    margin:0 0 34px;
+  }
+  .site-nav a{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    text-decoration:none;
+    font-size:1.02rem;
     font-weight:700;
     color:#0f766e;
     background:#fff;
-    padding:8px 18px;
+    padding:9px 20px;
     border-radius:999px;
     box-shadow:0 2px 8px rgba(0,0,0,.08);
-    z-index:10;
     letter-spacing:.02em;
+    transition:transform .2s ease, box-shadow .2s ease;
   }
-
-  .trailer-wrap{
-    max-width:720px;
-    margin:0 auto 56px;
-  }
-  .trailer-wrap video{
-    width:100%;
-    display:block;
-    border-radius:20px;
-    box-shadow:0 12px 40px -12px rgba(0,0,0,.35);
-    background:#000;
-    filter:brightness(1.25) saturate(1.08);
-  }
-  .trailer-wrap video:fullscreen,
-  .trailer-wrap video:-webkit-full-screen,
-  .trailer-wrap video:-moz-full-screen{
-    filter:none;
-  }
-
-  .claude-badge-wrap{
-    text-align:center;
-    margin-top:14px;
-  }
-  .claude-badge{
-    display:inline-flex;
-    align-items:center;
-    gap:7px;
-    font-size:.8rem;
-    font-weight:600;
-    color:#b3532e;
-    background:#fdf3ee;
-    border:1px solid #f3d9cb;
-    padding:6px 14px;
-    border-radius:999px;
-    letter-spacing:.01em;
-  }
-  .claude-badge-icon{
-    width:13px;
-    height:13px;
-    fill:#c9633a;
-    flex-shrink:0;
-  }
+  .site-nav a:hover{ transform:translateY(-2px); box-shadow:0 8px 16px -6px rgba(0,0,0,.2); }
+  .site-nav a.lb-link{ color:#9333ea; }
 
   @media (max-width:480px){
     .wrap{ padding:44px 18px 60px; }
     .made-by{ top:10px; right:10px; font-size:.95rem; padding:6px 12px; }
-    .tagline-badge{ top:10px; left:10px; font-size:.9rem; padding:6px 11px; }
+    .site-nav a{ font-size:.85rem; padding:7px 14px; }
   }
 </style>
 </head>
@@ -419,17 +394,24 @@
     <div class="avatar-card">
       <h1 class="avatar-title">🤖 Build Your Crew-Bot</h1>
       <p class="avatar-sub">Every explorer needs a sidekick. Name yours and pick a color before you set out on your quest.</p>
-      <svg class="bot-preview" viewBox="0 0 200 200" aria-hidden="true">
-        <ellipse cx="100" cy="178" rx="46" ry="10" fill="rgba(0,0,0,.15)"/>
-        <rect x="58" y="72" width="14" height="34" rx="7" class="bot-arm"/>
-        <rect x="128" y="72" width="14" height="34" rx="7" class="bot-arm"/>
-        <rect x="70" y="60" width="60" height="70" rx="18" class="bot-body"/>
-        <rect x="97" y="10" width="6" height="18" class="bot-antenna"/>
-        <circle cx="100" cy="10" r="6" class="bot-antenna-tip"/>
-        <circle cx="100" cy="46" r="34" class="bot-head"/>
-        <circle cx="88" cy="44" r="7" fill="#20242c"/>
-        <circle cx="112" cy="44" r="7" fill="#20242c"/>
-        <rect x="90" y="60" width="20" height="8" rx="4" fill="#20242c" opacity=".5"/>
+      <svg class="bot-preview" viewBox="0 0 200 210" aria-hidden="true">
+        <ellipse cx="100" cy="192" rx="50" ry="10" fill="rgba(0,0,0,.15)"/>
+        <rect x="76" y="150" width="16" height="30" rx="7" class="bot-leg"/>
+        <rect x="108" y="150" width="16" height="30" rx="7" class="bot-leg"/>
+        <rect x="55" y="78" width="16" height="40" rx="8" class="bot-arm"/>
+        <rect x="129" y="78" width="16" height="40" rx="8" class="bot-arm"/>
+        <circle cx="63" cy="122" r="9" class="bot-arm-tip"/>
+        <circle cx="137" cy="122" r="9" class="bot-arm-tip"/>
+        <rect x="66" y="64" width="68" height="88" rx="22" class="bot-body"/>
+        <circle cx="100" cy="108" r="16" class="bot-chest"/>
+        <circle cx="100" cy="108" r="8" class="bot-chest-core"/>
+        <rect x="97" y="8" width="6" height="20" class="bot-antenna"/>
+        <circle cx="100" cy="8" r="7" class="bot-antenna-tip"/>
+        <circle cx="100" cy="48" r="38" class="bot-head"/>
+        <rect x="72" y="38" width="56" height="26" rx="13" class="bot-visor"/>
+        <circle cx="87" cy="51" r="7" class="bot-eye"/>
+        <circle cx="113" cy="51" r="7" class="bot-eye"/>
+        <rect x="82" y="78" width="36" height="6" rx="3" fill="#20242c" opacity=".35"/>
       </svg>
       <input id="avatar-name" class="avatar-input" type="text" maxlength="16" placeholder="Type your name">
       <div class="swatch-row" id="swatch-row">
@@ -439,6 +421,8 @@
         <button class="swatch" data-color="#ffc21f" style="background:#ffc21f" aria-label="Yellow"></button>
         <button class="swatch" data-color="#9257ff" style="background:#9257ff" aria-label="Purple"></button>
         <button class="swatch" data-color="#ea3e3e" style="background:#ea3e3e" aria-label="Red"></button>
+        <button class="swatch" data-color="#25b3d6" style="background:#25b3d6" aria-label="Cyan"></button>
+        <button class="swatch" data-color="#e84393" style="background:#e84393" aria-label="Pink"></button>
       </div>
       <button id="avatar-go" class="avatar-go" disabled>Let's Go →</button>
     </div>
@@ -447,30 +431,66 @@
     <span>🤖</span> <span id="crewbot-badge-name"></span> <button id="crewbot-edit" title="Edit your crew-bot">✏️</button>
   </div>
   <div class="made-by">Made by Aarin</div>
-  <div class="tagline-badge">🎮 Game · Learn · Play</div>
   <div class="wrap">
     <header>
       <h1>Quest Crew Arcade 🎮</h1>
       <p>Eight games, one brainy crew of explorers — a quiz adventure, a star-map expedition, a history-repair puzzle, a postcard memory match, a theme park to build, an outpost to defend, a vocabulary quest, and a grand circuit race, all covering geography, space, animals, sports, logic, maths, science, language arts, art, design, and Spanish.</p>
     </header>
-    <div class="trailer-wrap">
-      <video src="quest-crew-arcade-trailer.mp4" controls playsinline preload="metadata"></video>
-    </div>
-    <h2 class="map-heading">🗺️ Choose Your Island</h2>
+    <nav class="site-nav">
+      <a href="#combined-lb" class="lb-link">🏆 Leaderboard</a>
+      <a href="#map-top">🎮 Game · Learn · Play</a>
+    </nav>
+    <h2 class="map-heading" id="map-top">🗺️ Choose Your Island</h2>
     <p class="map-note">Every game is its own floating island — tap one to start that quest. Each island has its own color code.</p>
     <div class="world-map">
-      <svg class="map-bg" viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-        <g opacity=".6" fill="#fff">
+      <svg class="map-layer" data-parallax-speed="6" viewBox="0 0 1000 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <radialGradient id="sunGlow" cx="82%" cy="10%" r="45%">
+            <stop offset="0%" stop-color="#fff6d8" stop-opacity=".9"/>
+            <stop offset="100%" stop-color="#fff6d8" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect x="0" y="0" width="1000" height="900" fill="url(#sunGlow)"/>
+        <g opacity=".75" fill="#fff">
           <ellipse cx="110" cy="60" rx="60" ry="20"/>
           <ellipse cx="160" cy="48" rx="40" ry="17"/>
           <ellipse cx="870" cy="90" rx="55" ry="19"/>
           <ellipse cx="915" cy="115" rx="38" ry="16"/>
           <ellipse cx="500" cy="40" rx="50" ry="16"/>
+          <ellipse cx="320" cy="140" rx="44" ry="15"/>
+          <ellipse cx="700" cy="200" rx="50" ry="17"/>
+        </g>
+        <g opacity=".55" fill="#e9c9ff">
+          <path d="M2 100 C110 -10, 280 190, 400 60 C520 -50, 700 160, 1000 30 L1000 0 L0 0 Z"/>
+        </g>
+      </svg>
+      <svg class="map-layer" data-parallax-speed="18" viewBox="0 0 1000 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <path d="M0 260 C120 190, 230 300, 340 230 C460 155, 560 260, 680 200 C800 140, 900 240, 1000 190 L1000 900 L0 900 Z" fill="#cfe0f7" opacity=".8"/>
+      </svg>
+      <svg class="map-layer" data-parallax-speed="34" viewBox="0 0 1000 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <path d="M0 420 C140 340, 260 430, 380 380 C520 320, 640 430, 780 370 C880 330, 950 400, 1000 380 L1000 900 L0 900 Z" fill="#d6ecd0" opacity=".9"/>
+        <path d="M0 480 C160 430, 300 500, 460 450 C600 410, 760 490, 1000 440 L1000 900 L0 900 Z" fill="#c3e2ba"/>
+      </svg>
+      <svg class="map-layer map-foreground" data-parallax-speed="52" viewBox="0 0 1000 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <path d="M0 780 C150 720, 320 800, 500 750 C680 700, 830 790, 1000 740 L1000 900 L0 900 Z" fill="#9fd18f"/>
+        <g fill="#7fbb6f">
+          <ellipse cx="70" cy="800" rx="30" ry="16"/>
+          <rect x="63" y="805" width="14" height="26"/>
+          <ellipse cx="930" cy="810" rx="34" ry="18"/>
+          <rect x="922" y="816" width="16" height="28"/>
+          <ellipse cx="470" cy="830" rx="26" ry="14"/>
+          <rect x="463" y="835" width="14" height="22"/>
+        </g>
+        <g fill="#6ca85e">
+          <circle cx="150" cy="820" r="10"/>
+          <circle cx="200" cy="835" r="8"/>
+          <circle cx="800" cy="840" r="9"/>
+          <circle cx="640" cy="820" r="7"/>
         </g>
       </svg>
       <div class="map-nodes">
         <div class="hub-label">Pick your<br>quest</div>
-        <a class="land paws" href="good-paws-crew.html" style="left:15%; top:16%;" title="Reformed troublemakers turned good guys. Complete 11 world missions and earn your badges — plus a retro arcade of bonus mini-games.">
+        <a class="land paws" href="good-paws-crew.html" style="left:15%; top:16%;" data-x="15" data-y="16" title="Reformed troublemakers turned good guys. Complete 11 world missions and earn your badges — plus a retro arcade of bonus mini-games.">
           <span class="island-3d">
             <span class="island-icon">🐾</span>
             <span class="island-disc"></span>
@@ -479,7 +499,7 @@
           <span class="land-name">Good Paws Crew</span>
           <span class="land-code">PAWS</span>
         </a>
-        <a class="land voyagers" href="star-voyagers.html" style="left:52%; top:11%;" title="Recover the galaxy's lost knowledge aboard the starship Nova Wanderer. 11 star systems, one Great Archive to restore.">
+        <a class="land voyagers" href="star-voyagers.html" style="left:52%; top:11%;" data-x="52" data-y="11" title="Recover the galaxy's lost knowledge aboard the starship Nova Wanderer. 11 star systems, one Great Archive to restore.">
           <span class="island-3d">
             <span class="island-icon">🚀</span>
             <span class="island-disc"></span>
@@ -488,7 +508,7 @@
           <span class="land-name">Star Voyagers</span>
           <span class="land-code">VOYA</span>
         </a>
-        <a class="land trekkers" href="time-trekkers.html" style="left:85%; top:22%;" title="A mysterious Time Fog has scrambled history. Trek across 11 ancient eras to repair the timeline for good.">
+        <a class="land trekkers" href="time-trekkers.html" style="left:85%; top:22%;" data-x="85" data-y="22" title="A mysterious Time Fog has scrambled history. Trek across 11 ancient eras to repair the timeline for good.">
           <span class="island-3d">
             <span class="island-icon">⏳</span>
             <span class="island-disc"></span>
@@ -497,7 +517,7 @@
           <span class="land-name">Time Trekkers</span>
           <span class="land-code">TREK</span>
         </a>
-        <a class="land defenders" href="fact-defenders.html" style="left:13%; top:54%;" title="Outpost Alliance: zap true-or-false claims before they reach the wall across 11 border outposts, defending alongside Commander Vex.">
+        <a class="land defenders" href="fact-defenders.html" style="left:13%; top:54%;" data-x="13" data-y="54" title="Outpost Alliance: zap true-or-false claims before they reach the wall across 11 border outposts, defending alongside Commander Vex.">
           <span class="island-3d">
             <span class="island-icon">🛡️</span>
             <span class="island-disc"></span>
@@ -506,7 +526,7 @@
           <span class="land-name">Fact Defenders</span>
           <span class="land-code">DFND</span>
         </a>
-        <a class="land builder" href="world-wonders-builder.html" style="left:43%; top:47%;" title="Build your own theme park across four zones with your Good Paws crew, earning Spark Points and tackling Vera's Discovery Challenges.">
+        <a class="land builder" href="world-wonders-builder.html" style="left:43%; top:47%;" data-x="43" data-y="47" title="Build your own theme park across four zones with your Good Paws crew, earning Spark Points and tackling Vera's Discovery Challenges.">
           <span class="island-3d">
             <span class="island-icon">🏗️</span>
             <span class="island-disc"></span>
@@ -515,7 +535,7 @@
           <span class="land-name">World Wonders Builder</span>
           <span class="land-code">BLDR</span>
         </a>
-        <a class="land wonders" href="passport-quest.html" style="left:78%; top:54%;" title="Postcards from Everywhere: flip and match postcard pairs across 11 famous stops to fill your passport and become an Official Globetrotter.">
+        <a class="land wonders" href="passport-quest.html" style="left:78%; top:54%;" data-x="78" data-y="54" title="Postcards from Everywhere: flip and match postcard pairs across 11 famous stops to fill your passport and become an Official Globetrotter.">
           <span class="island-3d">
             <span class="island-icon">🧳</span>
             <span class="island-disc"></span>
@@ -524,7 +544,7 @@
           <span class="land-name">Passport Quest</span>
           <span class="land-code">PASS</span>
         </a>
-        <a class="land wizards" href="word-wizards.html" style="left:28%; top:82%;" title="Vocabulary Quest: tap scrambled letter tiles to restore vocabulary words from their clues across 11 realms, guided by Archmage Lexicon.">
+        <a class="land wizards" href="word-wizards.html" style="left:28%; top:82%;" data-x="28" data-y="82" title="Vocabulary Quest: tap scrambled letter tiles to restore vocabulary words from their clues across 11 realms, guided by Archmage Lexicon.">
           <span class="island-3d">
             <span class="island-icon">📚</span>
             <span class="island-disc"></span>
@@ -533,7 +553,7 @@
           <span class="land-name">Word Wizards</span>
           <span class="land-code">WORD</span>
         </a>
-        <a class="land racers" href="fact-racers.html" style="left:65%; top:85%;" title="Grand Circuit: pick the correct answer to boost your car down 11 circuits of quick two-option questions, guided by Chief Checkered.">
+        <a class="land racers" href="fact-racers.html" style="left:65%; top:85%;" data-x="65" data-y="85" title="Grand Circuit: pick the correct answer to boost your car down 11 circuits of quick two-option questions, guided by Chief Checkered.">
           <span class="island-3d">
             <span class="island-icon">🏁</span>
             <span class="island-disc"></span>
@@ -544,7 +564,7 @@
         </a>
       </div>
     </div>
-    <div class="combined-lb">
+    <div class="combined-lb" id="combined-lb">
       <h2>🏆 Combined Leaderboard</h2>
       <p class="sub">Shows every player's best score in each of the 8 games, saved on this browser.</p>
       <div class="weekly-note" id="weekly-winners-note"></div>
@@ -553,14 +573,6 @@
     </div>
 
     <footer class="note">Progress saves automatically in your browser, separately for each game. Made for a curious Grade 6 crew leader.</footer>
-    <div class="claude-badge-wrap">
-      <span class="claude-badge">
-        <svg class="claude-badge-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M12 1 L13.9 9.2 L21.5 6.5 L15.3 12 L21.5 17.5 L13.9 14.8 L12 23 L10.1 14.8 L2.5 17.5 L8.7 12 L2.5 6.5 L10.1 9.2 Z"/>
-        </svg>
-        Made with Claude
-      </span>
-    </div>
   </div>
 
 <script>
@@ -638,6 +650,81 @@
     } else {
       screen.style.display = 'flex';
     }
+  })();
+
+  // Parallax scenery: background layers drift at different speeds as the map scrolls into view.
+  (function(){
+    const map = document.querySelector('.world-map');
+    if (!map) return;
+    const layers = Array.from(map.querySelectorAll('[data-parallax-speed]'));
+    let ticking = false;
+    function update(){
+      ticking = false;
+      const rect = map.getBoundingClientRect();
+      const center = rect.top + rect.height / 2;
+      const viewportCenter = window.innerHeight / 2;
+      const progress = (viewportCenter - center) / window.innerHeight;
+      layers.forEach((layer)=>{
+        const speed = parseFloat(layer.dataset.parallaxSpeed || '0');
+        layer.style.transform = 'translateY(' + (progress * speed) + 'px)';
+      });
+    }
+    function onScroll(){
+      if (!ticking) { requestAnimationFrame(update); ticking = true; }
+    }
+    window.addEventListener('scroll', onScroll, { passive:true });
+    window.addEventListener('resize', onScroll);
+    update();
+  })();
+
+  // Keyboard navigation: arrow keys move between islands, Enter/Space opens the selected one.
+  (function(){
+    const lands = Array.from(document.querySelectorAll('.land'));
+    if (!lands.length) return;
+    let selectedIndex = -1;
+
+    function selectLand(idx){
+      lands.forEach((l)=> l.classList.remove('selected'));
+      selectedIndex = idx;
+      const land = lands[idx];
+      land.classList.add('selected');
+      land.scrollIntoView({ behavior:'smooth', block:'center', inline:'center' });
+      land.focus({ preventScroll:true });
+    }
+
+    function findNearest(direction){
+      const cur = lands[selectedIndex];
+      const cx = parseFloat(cur.dataset.x), cy = parseFloat(cur.dataset.y);
+      let best = null, bestScore = Infinity;
+      lands.forEach((l, i)=>{
+        if (i === selectedIndex) return;
+        const x = parseFloat(l.dataset.x), y = parseFloat(l.dataset.y);
+        const dx = x - cx, dy = y - cy;
+        let primary, secondary;
+        if (direction === 'right'){ if (dx <= 0) return; primary = dx; secondary = Math.abs(dy); }
+        else if (direction === 'left'){ if (dx >= 0) return; primary = -dx; secondary = Math.abs(dy); }
+        else if (direction === 'down'){ if (dy <= 0) return; primary = dy; secondary = Math.abs(dx); }
+        else if (direction === 'up'){ if (dy >= 0) return; primary = -dy; secondary = Math.abs(dx); }
+        const score = primary + secondary * 1.4;
+        if (score < bestScore) { bestScore = score; best = i; }
+      });
+      return best;
+    }
+
+    document.addEventListener('keydown', (e)=>{
+      const tag = document.activeElement && document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const dirMap = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right' };
+      if (dirMap[e.key]) {
+        e.preventDefault();
+        if (selectedIndex === -1) { selectLand(0); return; }
+        const next = findNearest(dirMap[e.key]);
+        if (next !== null) selectLand(next);
+      } else if ((e.key === 'Enter' || e.key === ' ') && selectedIndex !== -1) {
+        e.preventDefault();
+        lands[selectedIndex].click();
+      }
+    });
   })();
 
   const LB_GAMES = [
