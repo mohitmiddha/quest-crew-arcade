@@ -53,12 +53,13 @@
   }
   .world-map{
     position:relative;
-    max-width:640px;
+    max-width:860px;
     margin:0 auto 20px;
-    aspect-ratio:1000/1300;
+    aspect-ratio:1000/800;
     border-radius:36px;
     overflow:hidden;
     box-shadow:0 2px 10px rgba(0,0,0,.08);
+    background:linear-gradient(180deg,#cfe8ff 0%,#eaf6ef 55%,#fdf3e7 100%);
   }
   .map-bg{
     position:absolute;
@@ -68,17 +69,23 @@
     display:block;
   }
   .map-nodes{ position:absolute; inset:0; }
-  .map-tag{
+  .hub-label{
     position:absolute;
+    left:50%; top:50%;
     transform:translate(-50%,-50%);
+    text-align:center;
     font-weight:800;
-    font-size:.78rem;
-    letter-spacing:.04em;
-    color:#fff;
-    background:rgba(30,20,10,.55);
-    padding:5px 14px;
-    border-radius:999px;
-    white-space:nowrap;
+    color:#6b7d8f;
+    font-size:.8rem;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    opacity:.55;
+    pointer-events:none;
+    width:140px;
+  }
+  @keyframes islandFloat{
+    0%,100%{ transform:translate(-50%,-50%) translateY(0); }
+    50%{ transform:translate(-50%,-50%) translateY(-10px); }
   }
   .land{
     position:absolute;
@@ -87,44 +94,73 @@
     flex-direction:column;
     align-items:center;
     text-decoration:none;
-    width:120px;
+    width:160px;
     text-align:center;
+    animation:islandFloat 5.5s ease-in-out infinite;
   }
-  .land-mound{
-    width:84px;
-    height:84px;
-    border-radius:50%;
+  .land:nth-child(2n){ animation-duration:6.4s; animation-delay:-1.4s; }
+  .land:nth-child(3n){ animation-duration:5s; animation-delay:-2.8s; }
+  .land:nth-child(4n){ animation-duration:6.9s; animation-delay:-.6s; }
+  .island-shape{ position:relative; width:126px; height:126px; }
+  .island-top{
+    position:absolute;
+    inset:0;
+    border-radius:46% 54% 52% 48% / 44% 41% 59% 56%;
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:2.5rem;
-    border:5px solid rgba(255,255,255,.7);
-    box-shadow:0 8px 0 -1px rgba(0,0,0,.1), 0 16px 26px -10px rgba(0,0,0,.4);
+    font-size:2.7rem;
+    border:5px solid rgba(255,255,255,.6);
+    box-shadow:0 20px 26px -12px rgba(0,0,0,.4), inset 0 -8px 14px rgba(0,0,0,.14), inset 0 6px 10px rgba(255,255,255,.55);
     transition:transform .35s cubic-bezier(.3,1.6,.4,1), box-shadow .35s ease;
   }
-  .land:hover .land-mound, .land:focus-visible .land-mound{
-    transform:scale(1.14) translateY(-6px) rotate(-4deg);
-    box-shadow:0 4px 0 -1px rgba(0,0,0,.1), 0 22px 30px -10px rgba(0,0,0,.45);
+  .island-underside{
+    position:absolute;
+    left:50%;
+    bottom:-16px;
+    transform:translateX(-50%);
+    width:56%;
+    height:28px;
+    border-radius:0 0 60% 60%/0 0 100% 100%;
+    filter:brightness(.68) saturate(1.1);
+    z-index:-1;
+  }
+  .land:hover .island-top, .land:focus-visible .island-top{
+    transform:scale(1.12) rotate(-3deg);
+    box-shadow:0 26px 32px -12px rgba(0,0,0,.45), inset 0 -8px 14px rgba(0,0,0,.14), inset 0 6px 10px rgba(255,255,255,.55);
   }
   .land-name{
-    margin-top:9px;
+    margin-top:16px;
     font-weight:800;
-    font-size:.78rem;
+    font-size:.82rem;
     line-height:1.2;
-    color:#3d2b10;
-    background:rgba(255,255,255,.92);
-    padding:4px 10px;
-    border-radius:999px;
-    box-shadow:0 2px 6px rgba(0,0,0,.1);
+    color:#fff;
   }
-  .land.paws .land-mound{ background:linear-gradient(155deg,#ffe1c4,#ff9d5c); }
-  .land.voyagers .land-mound{ background:linear-gradient(155deg,#c9d6ff,#7f9aff); }
-  .land.trekkers .land-mound{ background:linear-gradient(155deg,#f3dfb0,#dcae5e); }
-  .land.wonders .land-mound{ background:linear-gradient(155deg,#bdf0d8,#69cf9e); }
-  .land.builder .land-mound{ background:linear-gradient(155deg,#fff3b0,#ffd23f); }
-  .land.defenders .land-mound{ background:linear-gradient(155deg,#c2f0e0,#5cd2ab); }
-  .land.wizards .land-mound{ background:linear-gradient(155deg,#e0cbff,#a877ff); }
-  .land.racers .land-mound{ background:linear-gradient(155deg,#ffd7b0,#ff8a3d); }
+  .land-code{
+    margin-top:3px;
+    font-size:.62rem;
+    font-weight:700;
+    letter-spacing:.05em;
+    padding:2px 9px;
+    border-radius:999px;
+    color:#fff;
+  }
+  .land.paws .island-top, .land.paws .island-underside{ background:linear-gradient(155deg,#ffb877,#ff8a3d); }
+  .land.paws .land-name{ color:#c2560f; } .land.paws .land-code{ background:#ff8a3d; }
+  .land.voyagers .island-top, .land.voyagers .island-underside{ background:linear-gradient(155deg,#a9bcff,#5b7bff); }
+  .land.voyagers .land-name{ color:#33459c; } .land.voyagers .land-code{ background:#5b7bff; }
+  .land.trekkers .island-top, .land.trekkers .island-underside{ background:linear-gradient(155deg,#f0cd83,#c99435); }
+  .land.trekkers .land-name{ color:#8a611c; } .land.trekkers .land-code{ background:#c99435; }
+  .land.wonders .island-top, .land.wonders .island-underside{ background:linear-gradient(155deg,#6fe0a8,#22a866); }
+  .land.wonders .land-name{ color:#0f6d3e; } .land.wonders .land-code{ background:#22a866; }
+  .land.builder .island-top, .land.builder .island-underside{ background:linear-gradient(155deg,#ffe066,#ffc21f); }
+  .land.builder .land-name{ color:#8a6400; } .land.builder .land-code{ background:#e6a800; }
+  .land.defenders .island-top, .land.defenders .island-underside{ background:linear-gradient(155deg,#7fdcef,#25b3d6); }
+  .land.defenders .land-name{ color:#0d6d82; } .land.defenders .land-code{ background:#25b3d6; }
+  .land.wizards .island-top, .land.wizards .island-underside{ background:linear-gradient(155deg,#cba8ff,#9257ff); }
+  .land.wizards .land-name{ color:#5a2ea3; } .land.wizards .land-code{ background:#9257ff; }
+  .land.racers .island-top, .land.racers .island-underside{ background:linear-gradient(155deg,#ff8f8f,#ea3e3e); }
+  .land.racers .land-name{ color:#a91d1d; } .land.racers .land-code{ background:#ea3e3e; }
   .map-note{
     text-align:center;
     font-size:.85rem;
@@ -132,10 +168,13 @@
     margin:0 0 12px;
   }
   @media (max-width:600px){
-    .land{ width:88px; }
-    .land-mound{ width:60px; height:60px; font-size:1.7rem; border-width:3px; }
-    .land-name{ font-size:.66rem; padding:3px 7px; }
-    .map-tag{ font-size:.62rem; padding:4px 10px; }
+    .land{ width:96px; }
+    .island-shape{ width:78px; height:78px; }
+    .island-top{ font-size:1.8rem; border-width:3px; }
+    .island-underside{ bottom:-9px; height:16px; }
+    .land-name{ font-size:.68rem; margin-top:10px; }
+    .land-code{ font-size:.54rem; padding:2px 7px; }
+    .hub-label{ font-size:.62rem; width:100px; }
   }
 
   footer.note{
@@ -286,77 +325,84 @@
     <div class="trailer-wrap">
       <video src="quest-crew-arcade-trailer.mp4" controls playsinline preload="metadata"></video>
     </div>
-    <h2 class="map-heading">🗺️ Choose Your Quest</h2>
-    <p class="map-note">Tap a land to start that quest — every game still has its own 11 missions, badges and leaderboard.</p>
+    <h2 class="map-heading">🗺️ Choose Your Island</h2>
+    <p class="map-note">Every game is its own floating island — tap one to start that quest. Each island has its own color code.</p>
     <div class="world-map">
-      <svg class="map-bg" viewBox="0 0 1000 1300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-        <defs>
-          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#fdf3e7"/>
-            <stop offset="45%" stop-color="#eef6e6"/>
-            <stop offset="100%" stop-color="#e4f1fa"/>
-          </linearGradient>
-        </defs>
-        <rect x="0" y="0" width="1000" height="1300" fill="url(#sky)"/>
-        <g opacity=".55" fill="#fff">
-          <ellipse cx="140" cy="60" rx="70" ry="24"/>
-          <ellipse cx="195" cy="48" rx="46" ry="20"/>
-          <ellipse cx="860" cy="120" rx="60" ry="22"/>
-          <ellipse cx="905" cy="150" rx="42" ry="18"/>
-        </g>
-        <g opacity=".5">
-          <ellipse cx="60" cy="170" rx="150" ry="70" fill="#d9ecd2"/>
-          <ellipse cx="900" cy="340" rx="170" ry="80" fill="#e6f0d4"/>
-          <ellipse cx="90" cy="500" rx="160" ry="75" fill="#d9ecd2"/>
-          <ellipse cx="920" cy="640" rx="170" ry="80" fill="#dcefe4"/>
-          <ellipse cx="70" cy="790" rx="150" ry="70" fill="#e6f0d4"/>
-          <ellipse cx="910" cy="940" rx="170" ry="80" fill="#d9ecd2"/>
-          <ellipse cx="90" cy="1080" rx="160" ry="75" fill="#e3ecfa"/>
-          <ellipse cx="500" cy="1220" rx="260" ry="90" fill="#dcefe4"/>
-        </g>
-        <path d="M190,100 L780,235 L200,382 L790,528 L190,674 L790,820 L200,967 L500,1138"
-          fill="none" stroke="#e3a86b" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 26" opacity=".85"/>
-        <g opacity=".7" fill="#f0a35f">
-          <path d="M100 40 l6 16 h16 l-13 10 l5 16 l-14 -10 l-14 10 l5 -16 l-13 -10 h16 z"/>
-          <path d="M900 470 l5 13 h13 l-10 8 l4 13 l-11 -8 l-11 8 l4 -13 l-10 -8 h13 z"/>
-          <path d="M110 900 l5 13 h13 l-10 8 l4 13 l-11 -8 l-11 8 l4 -13 l-10 -8 h13 z"/>
+      <svg class="map-bg" viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <g opacity=".6" fill="#fff">
+          <ellipse cx="110" cy="60" rx="60" ry="20"/>
+          <ellipse cx="160" cy="48" rx="40" ry="17"/>
+          <ellipse cx="870" cy="90" rx="55" ry="19"/>
+          <ellipse cx="915" cy="115" rx="38" ry="16"/>
+          <ellipse cx="500" cy="40" rx="50" ry="16"/>
         </g>
       </svg>
       <div class="map-nodes">
-        <div class="map-tag" style="left:9%; top:2.5%;">START</div>
-        <a class="land paws" href="good-paws-crew.html" style="left:19%; top:7.7%;" title="Reformed troublemakers turned good guys. Complete 11 world missions and earn your badges — plus a retro arcade of bonus mini-games.">
-          <span class="land-mound">🐾</span>
+        <div class="hub-label">Pick your<br>quest</div>
+        <a class="land paws" href="good-paws-crew.html" style="left:15%; top:16%;" title="Reformed troublemakers turned good guys. Complete 11 world missions and earn your badges — plus a retro arcade of bonus mini-games.">
+          <span class="island-shape">
+            <span class="island-underside"></span>
+            <span class="island-top">🐾</span>
+          </span>
           <span class="land-name">Good Paws Crew</span>
+          <span class="land-code">PAWS</span>
         </a>
-        <a class="land voyagers" href="star-voyagers.html" style="left:78%; top:18.1%;" title="Recover the galaxy's lost knowledge aboard the starship Nova Wanderer. 11 star systems, one Great Archive to restore.">
-          <span class="land-mound">🚀</span>
+        <a class="land voyagers" href="star-voyagers.html" style="left:52%; top:11%;" title="Recover the galaxy's lost knowledge aboard the starship Nova Wanderer. 11 star systems, one Great Archive to restore.">
+          <span class="island-shape">
+            <span class="island-underside"></span>
+            <span class="island-top">🚀</span>
+          </span>
           <span class="land-name">Star Voyagers</span>
+          <span class="land-code">VOYA</span>
         </a>
-        <a class="land trekkers" href="time-trekkers.html" style="left:20%; top:29.4%;" title="A mysterious Time Fog has scrambled history. Trek across 11 ancient eras to repair the timeline for good.">
-          <span class="land-mound">⏳</span>
+        <a class="land trekkers" href="time-trekkers.html" style="left:85%; top:22%;" title="A mysterious Time Fog has scrambled history. Trek across 11 ancient eras to repair the timeline for good.">
+          <span class="island-shape">
+            <span class="island-underside"></span>
+            <span class="island-top">⏳</span>
+          </span>
           <span class="land-name">Time Trekkers</span>
+          <span class="land-code">TREK</span>
         </a>
-        <a class="land wonders" href="passport-quest.html" style="left:79%; top:40.6%;" title="Postcards from Everywhere: flip and match postcard pairs across 11 famous stops to fill your passport and become an Official Globetrotter.">
-          <span class="land-mound">🧳</span>
-          <span class="land-name">Passport Quest</span>
-        </a>
-        <a class="land builder" href="world-wonders-builder.html" style="left:19%; top:51.8%;" title="Build your own theme park across four zones with your Good Paws crew, earning Spark Points and tackling Vera's Discovery Challenges.">
-          <span class="land-mound">🏗️</span>
-          <span class="land-name">World Wonders Builder</span>
-        </a>
-        <a class="land defenders" href="fact-defenders.html" style="left:79%; top:63.1%;" title="Outpost Alliance: zap true-or-false claims before they reach the wall across 11 border outposts, defending alongside Commander Vex.">
-          <span class="land-mound">🛡️</span>
+        <a class="land defenders" href="fact-defenders.html" style="left:13%; top:54%;" title="Outpost Alliance: zap true-or-false claims before they reach the wall across 11 border outposts, defending alongside Commander Vex.">
+          <span class="island-shape">
+            <span class="island-underside"></span>
+            <span class="island-top">🛡️</span>
+          </span>
           <span class="land-name">Fact Defenders</span>
+          <span class="land-code">DFND</span>
         </a>
-        <a class="land wizards" href="word-wizards.html" style="left:20%; top:74.4%;" title="Vocabulary Quest: tap scrambled letter tiles to restore vocabulary words from their clues across 11 realms, guided by Archmage Lexicon.">
-          <span class="land-mound">📚</span>
+        <a class="land builder" href="world-wonders-builder.html" style="left:43%; top:47%;" title="Build your own theme park across four zones with your Good Paws crew, earning Spark Points and tackling Vera's Discovery Challenges.">
+          <span class="island-shape">
+            <span class="island-underside"></span>
+            <span class="island-top">🏗️</span>
+          </span>
+          <span class="land-name">World Wonders Builder</span>
+          <span class="land-code">BLDR</span>
+        </a>
+        <a class="land wonders" href="passport-quest.html" style="left:78%; top:54%;" title="Postcards from Everywhere: flip and match postcard pairs across 11 famous stops to fill your passport and become an Official Globetrotter.">
+          <span class="island-shape">
+            <span class="island-underside"></span>
+            <span class="island-top">🧳</span>
+          </span>
+          <span class="land-name">Passport Quest</span>
+          <span class="land-code">PASS</span>
+        </a>
+        <a class="land wizards" href="word-wizards.html" style="left:28%; top:82%;" title="Vocabulary Quest: tap scrambled letter tiles to restore vocabulary words from their clues across 11 realms, guided by Archmage Lexicon.">
+          <span class="island-shape">
+            <span class="island-underside"></span>
+            <span class="island-top">📚</span>
+          </span>
           <span class="land-name">Word Wizards</span>
+          <span class="land-code">WORD</span>
         </a>
-        <a class="land racers" href="fact-racers.html" style="left:50%; top:87.5%;" title="Grand Circuit: pick the correct answer to boost your car down 11 circuits of quick two-option questions, guided by Chief Checkered.">
-          <span class="land-mound">🏁</span>
+        <a class="land racers" href="fact-racers.html" style="left:65%; top:85%;" title="Grand Circuit: pick the correct answer to boost your car down 11 circuits of quick two-option questions, guided by Chief Checkered.">
+          <span class="island-shape">
+            <span class="island-underside"></span>
+            <span class="island-top">🏁</span>
+          </span>
           <span class="land-name">Fact Racers</span>
+          <span class="land-code">RACE</span>
         </a>
-        <div class="map-tag" style="left:50%; top:97%;">FINISH 🏆</div>
       </div>
     </div>
     <div class="combined-lb">
