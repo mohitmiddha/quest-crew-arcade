@@ -15,12 +15,102 @@
 <meta name="apple-mobile-web-app-title" content="Quest Crew">
 <style>
   *{ box-sizing:border-box; }
+  :root{ --bot-color:#ff8a3d; }
   body{
     margin:0;
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
     background:#fafafa;
     color:#1a1a2e;
     min-height:100vh;
+  }
+  .avatar-screen{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(180deg,#cfe8ff,#eaf6ef 55%,#fdf3e7);
+    padding:24px;
+    transition:opacity .35s ease;
+  }
+  .avatar-screen.closing{ opacity:0; pointer-events:none; }
+  .avatar-card{
+    background:#fff;
+    border-radius:28px;
+    padding:36px 30px;
+    max-width:380px;
+    width:100%;
+    text-align:center;
+    box-shadow:0 20px 50px -20px rgba(0,0,0,.35);
+  }
+  .avatar-title{ font-size:1.5rem; margin:0 0 8px; letter-spacing:-.01em; }
+  .avatar-sub{ color:#6b7280; font-size:.9rem; margin:0 0 16px; line-height:1.4; }
+  .bot-preview{ width:150px; height:150px; margin:0 auto 14px; display:block; }
+  .bot-body{ fill:var(--bot-color); }
+  .bot-head{ fill:var(--bot-color); filter:brightness(1.12); }
+  .bot-arm{ fill:var(--bot-color); filter:brightness(.82); }
+  .bot-antenna{ fill:#2b2b38; }
+  .bot-antenna-tip{ fill:#ffd23f; }
+  .avatar-input{
+    width:100%;
+    padding:12px 14px;
+    border-radius:14px;
+    border:2px solid #eee;
+    font-size:1rem;
+    margin-bottom:16px;
+    text-align:center;
+    font-weight:700;
+    font-family:inherit;
+  }
+  .avatar-input:focus{ outline:none; border-color:#c9633a; }
+  .swatch-row{ display:flex; justify-content:center; gap:10px; margin-bottom:22px; }
+  .swatch{
+    width:34px; height:34px;
+    border-radius:50%;
+    border:3px solid transparent;
+    cursor:pointer;
+    padding:0;
+    transition:transform .2s ease, border-color .2s ease;
+  }
+  .swatch.active{ border-color:#1a1a2e; transform:scale(1.15); }
+  .avatar-go{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:999px;
+    background:#c9633a;
+    color:#fff;
+    font-weight:800;
+    font-size:1rem;
+    cursor:pointer;
+    font-family:inherit;
+    transition:opacity .2s ease, transform .2s ease;
+  }
+  .avatar-go:disabled{ opacity:.4; cursor:not-allowed; }
+  .avatar-go:not(:disabled):hover{ transform:translateY(-2px); }
+  .crewbot-badge{
+    position:fixed;
+    top:16px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:9;
+    display:none;
+    align-items:center;
+    gap:8px;
+    background:#fff;
+    padding:6px 14px;
+    border-radius:999px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+    font-weight:700;
+    font-size:.85rem;
+    color:#3d2b10;
+  }
+  .crewbot-badge button{ border:none; background:none; cursor:pointer; font-size:.9rem; padding:0 2px; }
+  @media (max-width:480px){
+    .crewbot-badge{ font-size:.7rem; padding:5px 10px; top:56px; }
+    .avatar-card{ padding:28px 22px; }
+    .bot-preview{ width:120px; height:120px; }
   }
   .wrap{
     max-width:1080px;
@@ -101,40 +191,56 @@
   .land:nth-child(2n){ animation-duration:6.4s; animation-delay:-1.4s; }
   .land:nth-child(3n){ animation-duration:5s; animation-delay:-2.8s; }
   .land:nth-child(4n){ animation-duration:6.9s; animation-delay:-.6s; }
-  .island-shape{ position:relative; width:126px; height:126px; }
-  .island-top{
-    position:absolute;
-    inset:0;
-    border-radius:46% 54% 52% 48% / 44% 41% 59% 56%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:2.7rem;
-    border:5px solid rgba(255,255,255,.6);
-    box-shadow:0 20px 26px -12px rgba(0,0,0,.4), inset 0 -8px 14px rgba(0,0,0,.14), inset 0 6px 10px rgba(255,255,255,.55);
-    transition:transform .35s cubic-bezier(.3,1.6,.4,1), box-shadow .35s ease;
+  .island-3d{
+    position:relative;
+    width:140px;
+    height:150px;
+    perspective:420px;
   }
-  .island-underside{
+  .island-icon{
     position:absolute;
     left:50%;
-    bottom:-16px;
+    top:2px;
     transform:translateX(-50%);
-    width:56%;
-    height:28px;
-    border-radius:0 0 60% 60%/0 0 100% 100%;
-    filter:brightness(.68) saturate(1.1);
-    z-index:-1;
+    font-size:2.6rem;
+    z-index:3;
+    filter:drop-shadow(0 8px 6px rgba(0,0,0,.35));
+    transition:transform .35s cubic-bezier(.3,1.6,.4,1);
   }
-  .land:hover .island-top, .land:focus-visible .island-top{
-    transform:scale(1.12) rotate(-3deg);
-    box-shadow:0 26px 32px -12px rgba(0,0,0,.45), inset 0 -8px 14px rgba(0,0,0,.14), inset 0 6px 10px rgba(255,255,255,.55);
+  .island-disc{
+    position:absolute;
+    left:50%;
+    top:56px;
+    width:130px;
+    height:92px;
+    transform:translateX(-50%) rotateX(58deg);
+    border-radius:50%;
+    background:linear-gradient(155deg,var(--c1),var(--c2));
+    box-shadow:0 0 0 6px rgba(255,255,255,.55) inset, 0 0 22px rgba(0,0,0,.18) inset, 0 30px 34px -14px rgba(0,0,0,.42);
+    z-index:2;
   }
+  .island-base{
+    position:absolute;
+    left:50%;
+    top:96px;
+    width:96px;
+    height:58px;
+    transform:translateX(-50%);
+    clip-path:polygon(12% 0%, 88% 0%, 68% 100%, 32% 100%);
+    background:
+      repeating-linear-gradient(180deg, rgba(255,255,255,.14) 0 5px, rgba(0,0,0,0) 5px 13px),
+      linear-gradient(180deg, var(--c2), var(--c3));
+    box-shadow:0 16px 22px -8px rgba(0,0,0,.4);
+    z-index:1;
+  }
+  .land:hover .island-icon, .land:focus-visible .island-icon{ transform:translateX(-50%) scale(1.15) rotate(-4deg); }
+  .land:hover .island-disc, .land:focus-visible .island-disc{ box-shadow:0 0 0 6px rgba(255,255,255,.7) inset, 0 0 22px rgba(0,0,0,.18) inset, 0 36px 40px -14px rgba(0,0,0,.48); }
   .land-name{
-    margin-top:16px;
+    margin-top:8px;
     font-weight:800;
     font-size:.82rem;
     line-height:1.2;
-    color:#fff;
+    color:var(--c3);
   }
   .land-code{
     margin-top:3px;
@@ -144,23 +250,16 @@
     padding:2px 9px;
     border-radius:999px;
     color:#fff;
+    background:var(--c2);
   }
-  .land.paws .island-top, .land.paws .island-underside{ background:linear-gradient(155deg,#ffb877,#ff8a3d); }
-  .land.paws .land-name{ color:#c2560f; } .land.paws .land-code{ background:#ff8a3d; }
-  .land.voyagers .island-top, .land.voyagers .island-underside{ background:linear-gradient(155deg,#a9bcff,#5b7bff); }
-  .land.voyagers .land-name{ color:#33459c; } .land.voyagers .land-code{ background:#5b7bff; }
-  .land.trekkers .island-top, .land.trekkers .island-underside{ background:linear-gradient(155deg,#f0cd83,#c99435); }
-  .land.trekkers .land-name{ color:#8a611c; } .land.trekkers .land-code{ background:#c99435; }
-  .land.wonders .island-top, .land.wonders .island-underside{ background:linear-gradient(155deg,#6fe0a8,#22a866); }
-  .land.wonders .land-name{ color:#0f6d3e; } .land.wonders .land-code{ background:#22a866; }
-  .land.builder .island-top, .land.builder .island-underside{ background:linear-gradient(155deg,#ffe066,#ffc21f); }
-  .land.builder .land-name{ color:#8a6400; } .land.builder .land-code{ background:#e6a800; }
-  .land.defenders .island-top, .land.defenders .island-underside{ background:linear-gradient(155deg,#7fdcef,#25b3d6); }
-  .land.defenders .land-name{ color:#0d6d82; } .land.defenders .land-code{ background:#25b3d6; }
-  .land.wizards .island-top, .land.wizards .island-underside{ background:linear-gradient(155deg,#cba8ff,#9257ff); }
-  .land.wizards .land-name{ color:#5a2ea3; } .land.wizards .land-code{ background:#9257ff; }
-  .land.racers .island-top, .land.racers .island-underside{ background:linear-gradient(155deg,#ff8f8f,#ea3e3e); }
-  .land.racers .land-name{ color:#a91d1d; } .land.racers .land-code{ background:#ea3e3e; }
+  .land.paws{ --c1:#ffc79a; --c2:#ff8a3d; --c3:#a4470c; }
+  .land.voyagers{ --c1:#b9c8ff; --c2:#5b7bff; --c3:#28399e; }
+  .land.trekkers{ --c1:#f3dca4; --c2:#c99435; --c3:#7a5817; }
+  .land.wonders{ --c1:#93e8bd; --c2:#22a866; --c3:#0f6b3f; }
+  .land.builder{ --c1:#ffe98f; --c2:#ffc21f; --c3:#a17300; }
+  .land.defenders{ --c1:#a0e6f3; --c2:#25b3d6; --c3:#0c6577; }
+  .land.wizards{ --c1:#dcc2ff; --c2:#9257ff; --c3:#4d258e; }
+  .land.racers{ --c1:#ffb3b3; --c2:#ea3e3e; --c3:#8f1c1c; }
   .map-note{
     text-align:center;
     font-size:.85rem;
@@ -169,10 +268,11 @@
   }
   @media (max-width:600px){
     .land{ width:96px; }
-    .island-shape{ width:78px; height:78px; }
-    .island-top{ font-size:1.8rem; border-width:3px; }
-    .island-underside{ bottom:-9px; height:16px; }
-    .land-name{ font-size:.68rem; margin-top:10px; }
+    .island-3d{ width:96px; height:104px; perspective:280px; }
+    .island-icon{ font-size:1.8rem; }
+    .island-disc{ top:38px; width:88px; height:62px; }
+    .island-base{ top:64px; width:64px; height:38px; }
+    .land-name{ font-size:.68rem; margin-top:6px; }
     .land-code{ font-size:.54rem; padding:2px 7px; }
     .hub-label{ font-size:.62rem; width:100px; }
   }
@@ -315,6 +415,37 @@
 </style>
 </head>
 <body>
+  <div id="avatar-screen" class="avatar-screen">
+    <div class="avatar-card">
+      <h1 class="avatar-title">🤖 Build Your Crew-Bot</h1>
+      <p class="avatar-sub">Every explorer needs a sidekick. Name yours and pick a color before you set out on your quest.</p>
+      <svg class="bot-preview" viewBox="0 0 200 200" aria-hidden="true">
+        <ellipse cx="100" cy="178" rx="46" ry="10" fill="rgba(0,0,0,.15)"/>
+        <rect x="58" y="72" width="14" height="34" rx="7" class="bot-arm"/>
+        <rect x="128" y="72" width="14" height="34" rx="7" class="bot-arm"/>
+        <rect x="70" y="60" width="60" height="70" rx="18" class="bot-body"/>
+        <rect x="97" y="10" width="6" height="18" class="bot-antenna"/>
+        <circle cx="100" cy="10" r="6" class="bot-antenna-tip"/>
+        <circle cx="100" cy="46" r="34" class="bot-head"/>
+        <circle cx="88" cy="44" r="7" fill="#20242c"/>
+        <circle cx="112" cy="44" r="7" fill="#20242c"/>
+        <rect x="90" y="60" width="20" height="8" rx="4" fill="#20242c" opacity=".5"/>
+      </svg>
+      <input id="avatar-name" class="avatar-input" type="text" maxlength="16" placeholder="Type your name">
+      <div class="swatch-row" id="swatch-row">
+        <button class="swatch" data-color="#ff8a3d" style="background:#ff8a3d" aria-label="Orange"></button>
+        <button class="swatch" data-color="#5b7bff" style="background:#5b7bff" aria-label="Blue"></button>
+        <button class="swatch" data-color="#22a866" style="background:#22a866" aria-label="Green"></button>
+        <button class="swatch" data-color="#ffc21f" style="background:#ffc21f" aria-label="Yellow"></button>
+        <button class="swatch" data-color="#9257ff" style="background:#9257ff" aria-label="Purple"></button>
+        <button class="swatch" data-color="#ea3e3e" style="background:#ea3e3e" aria-label="Red"></button>
+      </div>
+      <button id="avatar-go" class="avatar-go" disabled>Let's Go →</button>
+    </div>
+  </div>
+  <div class="crewbot-badge" id="crewbot-badge">
+    <span>🤖</span> <span id="crewbot-badge-name"></span> <button id="crewbot-edit" title="Edit your crew-bot">✏️</button>
+  </div>
   <div class="made-by">Made by Aarin</div>
   <div class="tagline-badge">🎮 Game · Learn · Play</div>
   <div class="wrap">
@@ -340,65 +471,73 @@
       <div class="map-nodes">
         <div class="hub-label">Pick your<br>quest</div>
         <a class="land paws" href="good-paws-crew.html" style="left:15%; top:16%;" title="Reformed troublemakers turned good guys. Complete 11 world missions and earn your badges — plus a retro arcade of bonus mini-games.">
-          <span class="island-shape">
-            <span class="island-underside"></span>
-            <span class="island-top">🐾</span>
+          <span class="island-3d">
+            <span class="island-icon">🐾</span>
+            <span class="island-disc"></span>
+            <span class="island-base"></span>
           </span>
           <span class="land-name">Good Paws Crew</span>
           <span class="land-code">PAWS</span>
         </a>
         <a class="land voyagers" href="star-voyagers.html" style="left:52%; top:11%;" title="Recover the galaxy's lost knowledge aboard the starship Nova Wanderer. 11 star systems, one Great Archive to restore.">
-          <span class="island-shape">
-            <span class="island-underside"></span>
-            <span class="island-top">🚀</span>
+          <span class="island-3d">
+            <span class="island-icon">🚀</span>
+            <span class="island-disc"></span>
+            <span class="island-base"></span>
           </span>
           <span class="land-name">Star Voyagers</span>
           <span class="land-code">VOYA</span>
         </a>
         <a class="land trekkers" href="time-trekkers.html" style="left:85%; top:22%;" title="A mysterious Time Fog has scrambled history. Trek across 11 ancient eras to repair the timeline for good.">
-          <span class="island-shape">
-            <span class="island-underside"></span>
-            <span class="island-top">⏳</span>
+          <span class="island-3d">
+            <span class="island-icon">⏳</span>
+            <span class="island-disc"></span>
+            <span class="island-base"></span>
           </span>
           <span class="land-name">Time Trekkers</span>
           <span class="land-code">TREK</span>
         </a>
         <a class="land defenders" href="fact-defenders.html" style="left:13%; top:54%;" title="Outpost Alliance: zap true-or-false claims before they reach the wall across 11 border outposts, defending alongside Commander Vex.">
-          <span class="island-shape">
-            <span class="island-underside"></span>
-            <span class="island-top">🛡️</span>
+          <span class="island-3d">
+            <span class="island-icon">🛡️</span>
+            <span class="island-disc"></span>
+            <span class="island-base"></span>
           </span>
           <span class="land-name">Fact Defenders</span>
           <span class="land-code">DFND</span>
         </a>
         <a class="land builder" href="world-wonders-builder.html" style="left:43%; top:47%;" title="Build your own theme park across four zones with your Good Paws crew, earning Spark Points and tackling Vera's Discovery Challenges.">
-          <span class="island-shape">
-            <span class="island-underside"></span>
-            <span class="island-top">🏗️</span>
+          <span class="island-3d">
+            <span class="island-icon">🏗️</span>
+            <span class="island-disc"></span>
+            <span class="island-base"></span>
           </span>
           <span class="land-name">World Wonders Builder</span>
           <span class="land-code">BLDR</span>
         </a>
         <a class="land wonders" href="passport-quest.html" style="left:78%; top:54%;" title="Postcards from Everywhere: flip and match postcard pairs across 11 famous stops to fill your passport and become an Official Globetrotter.">
-          <span class="island-shape">
-            <span class="island-underside"></span>
-            <span class="island-top">🧳</span>
+          <span class="island-3d">
+            <span class="island-icon">🧳</span>
+            <span class="island-disc"></span>
+            <span class="island-base"></span>
           </span>
           <span class="land-name">Passport Quest</span>
           <span class="land-code">PASS</span>
         </a>
         <a class="land wizards" href="word-wizards.html" style="left:28%; top:82%;" title="Vocabulary Quest: tap scrambled letter tiles to restore vocabulary words from their clues across 11 realms, guided by Archmage Lexicon.">
-          <span class="island-shape">
-            <span class="island-underside"></span>
-            <span class="island-top">📚</span>
+          <span class="island-3d">
+            <span class="island-icon">📚</span>
+            <span class="island-disc"></span>
+            <span class="island-base"></span>
           </span>
           <span class="land-name">Word Wizards</span>
           <span class="land-code">WORD</span>
         </a>
         <a class="land racers" href="fact-racers.html" style="left:65%; top:85%;" title="Grand Circuit: pick the correct answer to boost your car down 11 circuits of quick two-option questions, guided by Chief Checkered.">
-          <span class="island-shape">
-            <span class="island-underside"></span>
-            <span class="island-top">🏁</span>
+          <span class="island-3d">
+            <span class="island-icon">🏁</span>
+            <span class="island-disc"></span>
+            <span class="island-base"></span>
           </span>
           <span class="land-name">Fact Racers</span>
           <span class="land-code">RACE</span>
@@ -425,6 +564,82 @@
   </div>
 
 <script>
+  (function(){
+    const KEY = 'qca_avatar';
+    const screen = document.getElementById('avatar-screen');
+    const nameInput = document.getElementById('avatar-name');
+    const goBtn = document.getElementById('avatar-go');
+    const swatches = Array.from(document.querySelectorAll('.swatch'));
+    const badge = document.getElementById('crewbot-badge');
+    const badgeName = document.getElementById('crewbot-badge-name');
+    const editBtn = document.getElementById('crewbot-edit');
+    let chosenColor = swatches[0] ? swatches[0].dataset.color : '#ff8a3d';
+
+    function applyBotColor(color){
+      document.documentElement.style.setProperty('--bot-color', color);
+    }
+    function setActiveSwatch(color){
+      swatches.forEach(s=> s.classList.toggle('active', s.dataset.color === color));
+    }
+    applyBotColor(chosenColor);
+    setActiveSwatch(chosenColor);
+
+    swatches.forEach(sw=>{
+      sw.addEventListener('click', ()=>{
+        chosenColor = sw.dataset.color;
+        applyBotColor(chosenColor);
+        setActiveSwatch(chosenColor);
+      });
+    });
+
+    if (nameInput) {
+      nameInput.addEventListener('input', ()=>{
+        goBtn.disabled = nameInput.value.trim().length === 0;
+      });
+    }
+
+    function showBadge(data){
+      badge.style.display = 'flex';
+      badgeName.textContent = data.name;
+      applyBotColor(data.color);
+      setActiveSwatch(data.color);
+    }
+
+    if (goBtn) {
+      goBtn.addEventListener('click', ()=>{
+        const data = { name: nameInput.value.trim().slice(0,16), color: chosenColor };
+        if (!data.name) return;
+        localStorage.setItem(KEY, JSON.stringify(data));
+        screen.classList.add('closing');
+        setTimeout(()=>{ screen.style.display = 'none'; }, 380);
+        showBadge(data);
+      });
+    }
+
+    if (editBtn) {
+      editBtn.addEventListener('click', ()=>{
+        screen.style.display = 'flex';
+        screen.classList.remove('closing');
+        const existing = JSON.parse(localStorage.getItem(KEY) || 'null');
+        if (existing) {
+          nameInput.value = existing.name;
+          goBtn.disabled = false;
+          chosenColor = existing.color;
+          applyBotColor(chosenColor);
+          setActiveSwatch(chosenColor);
+        }
+      });
+    }
+
+    const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (saved) {
+      screen.style.display = 'none';
+      showBadge(saved);
+    } else {
+      screen.style.display = 'flex';
+    }
+  })();
+
   const LB_GAMES = [
     { key:'leaderboard_goodPawsCrew',       label:'Good Paws' },
     { key:'leaderboard_starVoyagers',       label:'Star Voyagers' },
